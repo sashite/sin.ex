@@ -2,7 +2,7 @@
 
 [![Hex.pm](https://img.shields.io/hexpm/v/sashite_sin.svg)](https://hex.pm/packages/sashite_sin)
 [![Docs](https://img.shields.io/badge/hex-docs-blue.svg)](https://hexdocs.pm/sashite_sin)
-[![License](https://img.shields.io/hexpm/l/sashite_sin.svg)](https://github.com/sashite/sin.ex/blob/main/LICENSE.md)
+[![License](https://img.shields.io/hexpm/l/sashite_sin.svg)](https://github.com/sashite/sin.ex/blob/main/LICENSE)
 
 > **SIN** (Style Identifier Notation) implementation for Elixir.
 
@@ -202,13 +202,9 @@ Converting between SIN and SNN requires external, context-specific mapping.
 ## Related Specifications
 
 - [Game Protocol](https://sashite.dev/game-protocol/) — Conceptual foundation
-- [PIN](https://sashite.dev/specs/pin/1.0.0/) — Piece Identifier Notation
 - [SIN Specification](https://sashite.dev/specs/sin/1.0.0/) — Official specification
+- [SIN Examples](https://sashite.dev/specs/sin/1.0.0/examples/) — Usage examples
 
 ## License
 
-Available as open source under the [MIT License](https://opensource.org/licenses/MIT).
-
-## About
-
-Maintained by [Sashité](https://sashite.com/) — promoting chess variants and sharing the beauty of board game cultures.
+Available as open source under the [Apache License 2.0](https://opensource.org/licenses/Apache-2.0).
