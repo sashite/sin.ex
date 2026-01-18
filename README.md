@@ -1,4 +1,4 @@
-# Sashite.Sin
+# sin.ex
 
 [![Hex.pm](https://img.shields.io/hexpm/v/sashite_sin.svg)](https://hex.pm/packages/sashite_sin)
 [![Docs](https://img.shields.io/badge/hex-docs-blue.svg)](https://hexdocs.pm/sashite_sin)
@@ -6,9 +6,7 @@
 
 > **SIN** (Style Identifier Notation) implementation for Elixir.
 
-## What is SIN?
-
-SIN (Style Identifier Notation) provides a compact, ASCII-based format for encoding **Piece Style** with an associated **Side** in abstract strategy board games. It serves as a minimal building block that can be embedded in higher-level notations.
+## Overview
 
 This library implements the [SIN Specification v1.0.0](https://sashite.dev/specs/sin/1.0.0/).
 
@@ -19,185 +17,196 @@ Add `sashite_sin` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:sashite_sin, "~> 1.0"}
+    {:sashite_sin, "~> 2.0"}
   ]
 end
 ```
 
 ## Usage
 
+### Parsing (String → Identifier)
+
+Convert a SIN string into an `Identifier` struct.
+
 ```elixir
-# Parse SIN strings
+alias Sashite.Sin.Identifier
+
+# Standard parsing (returns {:ok, _} or {:error, _})
 {:ok, sin} = Sashite.Sin.parse("C")
 sin.style  # => :C
 sin.side   # => :first
 
-Sashite.Sin.to_string(sin)  # => "C"
+# Lowercase indicates second player
+{:ok, sin} = Sashite.Sin.parse("c")
+sin.style  # => :C
+sin.side   # => :second
 
-# Parse with pattern matching
-{:ok, chess_first} = Sashite.Sin.parse("C")   # Chess-style, first player
-{:ok, chess_second} = Sashite.Sin.parse("c")  # Chess-style, second player
-{:ok, shogi_first} = Sashite.Sin.parse("S")   # Shogi-style, first player
-
-# Bang version for direct access
+# Bang version (raises on error)
 sin = Sashite.Sin.parse!("C")
 
-# Create identifiers directly
-sin = Sashite.Sin.new(:C, :first)
-sin = Sashite.Sin.new(:S, :second)
-
-# Validation
-Sashite.Sin.valid?("C")        # => true
-Sashite.Sin.valid?("s")        # => true
-Sashite.Sin.valid?("CC")       # => false (more than one character)
-Sashite.Sin.valid?("1")        # => false (digit instead of letter)
-Sashite.Sin.valid?("")         # => false (empty string)
-
-# Side transformation
-flipped = Sashite.Sin.flip(sin)
-Sashite.Sin.to_string(flipped)  # => "c"
-
-# Attribute changes
-shogi = Sashite.Sin.with_style(sin, :S)
-Sashite.Sin.to_string(shogi)  # => "S"
-
-second = Sashite.Sin.with_side(sin, :second)
-Sashite.Sin.to_string(second)  # => "c"
-
-# Side queries
-Sashite.Sin.first_player?(sin)     # => true
-Sashite.Sin.second_player?(sin)    # => false
-
-# Comparison
-chess1 = Sashite.Sin.parse!("C")
-chess2 = Sashite.Sin.parse!("c")
-
-Sashite.Sin.same_style?(chess1, chess2)  # => true
-Sashite.Sin.same_side?(chess1, chess2)   # => false
+# Invalid input returns error tuple
+{:error, :empty_input} = Sashite.Sin.parse("")
+{:error, :input_too_long} = Sashite.Sin.parse("CC")
 ```
 
-## Format Specification
+### Formatting (Identifier → String)
 
-### Structure
-
-```
-<letter>
-```
-
-A SIN token is **exactly one** ASCII letter (`A-Z` or `a-z`).
-
-### Attribute Mapping
-
-| Attribute | Encoding |
-|-----------|----------|
-| Piece Style | Base letter (case-insensitive): `C` and `c` represent the same style |
-| Side | Letter case: uppercase → `first`, lowercase → `second` |
-
-### Side Convention
-
-- **Uppercase** (`A-Z`): First player (Side `first`)
-- **Lowercase** (`a-z`): Second player (Side `second`)
-
-### Common Conventions
-
-| SIN | Side | Typical Piece Style |
-|-----|------|---------------------|
-| `C` | First | Chess-style |
-| `c` | Second | Chess-style |
-| `S` | First | Shogi-style |
-| `s` | Second | Shogi-style |
-| `X` | First | Xiangqi-style |
-| `x` | Second | Xiangqi-style |
-| `M` | First | Makruk-style |
-| `m` | Second | Makruk-style |
-
-### Invalid Token Examples
-
-| String | Reason |
-|--------|--------|
-| `""` | Empty string |
-| `CC` | More than one character |
-| `c1` | Contains a digit |
-| `+C` | Contains a prefix character |
-| ` C` | Leading whitespace |
-| `C ` | Trailing whitespace |
-| `1` | Digit instead of letter |
-| `é` | Non-ASCII character |
-
-## API Reference
-
-### Parsing
+Convert an `Identifier` back to a SIN string.
 
 ```elixir
-Sashite.Sin.parse(sin_string)   # => {:ok, %Sashite.Sin{}} | {:error, reason}
-Sashite.Sin.parse!(sin_string)  # => %Sashite.Sin{} | raises ArgumentError
-Sashite.Sin.valid?(sin_string)  # => boolean
+alias Sashite.Sin.Identifier
+
+# From Identifier struct
+sin = Identifier.new(:C, :first)
+Identifier.to_string(sin)  # => "C"
+
+sin = Identifier.new(:C, :second)
+Identifier.to_string(sin)  # => "c"
 ```
 
-### Creation
+### Validation
 
 ```elixir
-Sashite.Sin.new(style, side)
+# Boolean check
+Sashite.Sin.valid?("C")   # => true
+Sashite.Sin.valid?("c")   # => true
+Sashite.Sin.valid?("")    # => false
+Sashite.Sin.valid?("CC")  # => false
+Sashite.Sin.valid?("1")   # => false
 ```
 
-### Conversion
+### Accessing Identifier Data
 
 ```elixir
-Sashite.Sin.to_string(sin)  # => String.t()
-Sashite.Sin.letter(sin)     # => String.t() (the single character)
+sin = Sashite.Sin.parse!("C")
+
+# Get attributes (struct fields)
+sin.style  # => :C
+sin.side   # => :first
+
+# Get string component
+Sashite.Sin.Identifier.letter(sin)  # => "C"
 ```
 
 ### Transformations
 
-All transformations return new `%Sashite.Sin{}` structs:
+All transformations return new immutable `Identifier` structs.
 
 ```elixir
-# Side
-Sashite.Sin.flip(sin)
+alias Sashite.Sin.Identifier
+
+sin = Sashite.Sin.parse!("C")
+
+# Side transformation
+Identifier.flip(sin) |> Identifier.to_string()  # => "c"
 
 # Attribute changes
-Sashite.Sin.with_style(sin, new_style)
-Sashite.Sin.with_side(sin, new_side)
+Identifier.with_style(sin, :S) |> Identifier.to_string()  # => "S"
+Identifier.with_side(sin, :second) |> Identifier.to_string()  # => "c"
 ```
 
 ### Queries
 
 ```elixir
-# Side
-Sashite.Sin.first_player?(sin)
-Sashite.Sin.second_player?(sin)
+alias Sashite.Sin.Identifier
 
-# Comparison
-Sashite.Sin.same_style?(sin1, sin2)
-Sashite.Sin.same_side?(sin1, sin2)
+sin = Sashite.Sin.parse!("C")
+
+# Side queries
+Identifier.first_player?(sin)   # => true
+Identifier.second_player?(sin)  # => false
+
+# Comparison queries
+other = Sashite.Sin.parse!("c")
+Identifier.same_style?(sin, other)  # => true
+Identifier.same_side?(sin, other)   # => false
 ```
 
-## Data Structure
+## API Reference
+
+### Types
 
 ```elixir
-%Sashite.Sin{
+# Identifier represents a parsed SIN identifier with style and side.
+%Sashite.Sin.Identifier{
   style: :A..:Z,          # Piece style (always uppercase atom)
   side: :first | :second  # Player side
 }
+
+# Create an Identifier from style and side.
+# Raises ArgumentError if attributes are invalid.
+Sashite.Sin.Identifier.new(style, side)
 ```
 
-## Protocol Mapping
+### Constants
 
-Following the [Game Protocol](https://sashite.dev/game-protocol/):
+```elixir
+Sashite.Sin.Constants.valid_styles()  # => [:A, :B, ..., :Z]
+Sashite.Sin.Constants.valid_sides()   # => [:first, :second]
+Sashite.Sin.Constants.max_string_length()  # => 1
+```
 
-| Protocol Attribute | SIN Encoding |
-|-------------------|--------------|
-| Piece Style | Base letter (case-insensitive) |
-| Side | Letter case |
+### Parsing
 
-## Relationship with SNN
+```elixir
+# Parses a SIN string into an Identifier.
+# Returns {:ok, identifier} or {:error, reason}.
+@spec Sashite.Sin.parse(String.t()) :: {:ok, Identifier.t()} | {:error, atom()}
 
-**Style Name Notation (SNN)** and SIN are **independent primitives** that serve complementary roles:
+# Parses a SIN string into an Identifier.
+# Raises ArgumentError if the string is not valid.
+@spec Sashite.Sin.parse!(String.t()) :: Identifier.t()
+```
 
-- **SIN** — compact, single-character style identifiers (`C`, `s`, `X`)
-- **SNN** — human-readable style names (`CHESS`, `shogi`, `XIANGQI`)
+### Validation
 
-Converting between SIN and SNN requires external, context-specific mapping.
+```elixir
+# Reports whether string is a valid SIN identifier.
+@spec Sashite.Sin.valid?(String.t()) :: boolean()
+```
+
+### Transformations
+
+All transformations return new `Sashite.Sin.Identifier` structs:
+
+```elixir
+# Side transformation
+@spec Identifier.flip(Identifier.t()) :: Identifier.t()
+
+# Attribute changes
+@spec Identifier.with_style(Identifier.t(), atom()) :: Identifier.t()
+@spec Identifier.with_side(Identifier.t(), atom()) :: Identifier.t()
+```
+
+### Queries
+
+```elixir
+# Side queries
+@spec Identifier.first_player?(Identifier.t()) :: boolean()
+@spec Identifier.second_player?(Identifier.t()) :: boolean()
+
+# Comparison queries
+@spec Identifier.same_style?(Identifier.t(), Identifier.t()) :: boolean()
+@spec Identifier.same_side?(Identifier.t(), Identifier.t()) :: boolean()
+```
+
+### Errors
+
+Parsing errors are returned as atoms:
+
+| Atom | Cause |
+|------|-------|
+| `:empty_input` | String length is 0 |
+| `:input_too_long` | String exceeds 1 character |
+| `:must_be_letter` | Character is not A-Z or a-z |
+
+## Design Principles
+
+- **Bounded values**: Explicit validation of styles and sides
+- **Struct-based**: `Identifier` struct enables pattern matching and encapsulation
+- **Elixir idioms**: `{:ok, _}` / `{:error, _}` tuples, `parse!` bang variant
+- **Immutable data**: All transformations return new structs
+- **No dependencies**: Pure Elixir standard library only
 
 ## Related Specifications
 

@@ -1,7 +1,7 @@
 defmodule Sashite.Sin.MixProject do
   use Mix.Project
 
-  @version "1.0.0"
+  @version "2.0.0"
   @source_url "https://github.com/sashite/sin.ex"
 
   def project do
@@ -13,8 +13,6 @@ defmodule Sashite.Sin.MixProject do
       description: description(),
       package: package(),
       deps: deps(),
-
-      # Documentation
       name: "Sashite.Sin",
       source_url: @source_url,
       homepage_url: "https://sashite.dev/specs/sin/",
@@ -25,26 +23,24 @@ defmodule Sashite.Sin.MixProject do
     ]
   end
 
-  # Run "mix help compile.app" to learn about applications.
   def application do
     [
       extra_applications: [:logger]
     ]
   end
 
-  # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.31", only: :dev, runtime: false}
     ]
   end
 
   defp description do
-    """
-    SIN (Style Identifier Notation) implementation for Elixir.
-    Provides a compact, ASCII-based format for encoding Piece Style with an
-    associated Side in abstract strategy board games.
-    """
+    "SIN (Style Identifier Notation) implementation for Elixir. " <>
+      "Provides a rule-agnostic format for identifying player styles in abstract strategy " <>
+      "board games with immutable identifier structs and functional programming principles."
   end
 
   defp package do
