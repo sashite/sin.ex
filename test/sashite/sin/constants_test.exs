@@ -6,27 +6,27 @@ defmodule Sashite.Sin.ConstantsTest do
   doctest Constants
 
   # ============================================================================
-  # valid_styles/0
+  # valid_abbrs/0
   # ============================================================================
 
-  describe "valid_styles/0" do
+  describe "valid_abbrs/0" do
     test "returns a list of 26 atoms" do
-      assert length(Constants.valid_styles()) == 26
+      assert length(Constants.valid_abbrs()) == 26
     end
 
     test "contains :A through :Z" do
-      styles = Constants.valid_styles()
+      abbrs = Constants.valid_abbrs()
 
-      assert :A in styles
-      assert :M in styles
-      assert :Z in styles
+      assert :A in abbrs
+      assert :M in abbrs
+      assert :Z in abbrs
     end
 
     test "does not contain lowercase atoms" do
-      styles = Constants.valid_styles()
+      abbrs = Constants.valid_abbrs()
 
-      refute :a in styles
-      refute :z in styles
+      refute :a in abbrs
+      refute :z in abbrs
     end
   end
 
@@ -51,31 +51,31 @@ defmodule Sashite.Sin.ConstantsTest do
   end
 
   # ============================================================================
-  # valid_style?/1
+  # valid_abbr?/1
   # ============================================================================
 
-  describe "valid_style?/1" do
-    test "returns true for valid uppercase style atoms" do
-      assert Constants.valid_style?(:A)
-      assert Constants.valid_style?(:C)
-      assert Constants.valid_style?(:Z)
+  describe "valid_abbr?/1" do
+    test "returns true for valid uppercase abbr atoms" do
+      assert Constants.valid_abbr?(:A)
+      assert Constants.valid_abbr?(:C)
+      assert Constants.valid_abbr?(:Z)
     end
 
-    test "returns false for lowercase style atoms" do
-      refute Constants.valid_style?(:a)
-      refute Constants.valid_style?(:c)
-      refute Constants.valid_style?(:z)
+    test "returns false for lowercase abbr atoms" do
+      refute Constants.valid_abbr?(:a)
+      refute Constants.valid_abbr?(:c)
+      refute Constants.valid_abbr?(:z)
     end
 
     test "returns false for non-atom values" do
-      refute Constants.valid_style?("C")
-      refute Constants.valid_style?(67)
-      refute Constants.valid_style?(nil)
+      refute Constants.valid_abbr?("C")
+      refute Constants.valid_abbr?(67)
+      refute Constants.valid_abbr?(nil)
     end
 
     test "returns false for invalid atoms" do
-      refute Constants.valid_style?(:invalid)
-      refute Constants.valid_style?(:first)
+      refute Constants.valid_abbr?(:invalid)
+      refute Constants.valid_abbr?(:first)
     end
   end
 

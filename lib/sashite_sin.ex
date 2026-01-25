@@ -12,13 +12,13 @@ defmodule Sashite.Sin do
   ## Examples
 
       iex> {:ok, sin} = Sashite.Sin.parse("C")
-      iex> sin.style
+      iex> sin.abbr
       :C
       iex> sin.side
       :first
 
       iex> sin = Sashite.Sin.parse!("c")
-      iex> sin.style
+      iex> sin.abbr
       :C
       iex> sin.side
       :second
@@ -56,13 +56,13 @@ defmodule Sashite.Sin do
   ## Examples
 
       iex> {:ok, sin} = Sashite.Sin.parse("C")
-      iex> sin.style
+      iex> sin.abbr
       :C
       iex> sin.side
       :first
 
       iex> {:ok, sin} = Sashite.Sin.parse("s")
-      iex> sin.style
+      iex> sin.abbr
       :S
       iex> sin.side
       :second
@@ -79,8 +79,8 @@ defmodule Sashite.Sin do
   @spec parse(String.t()) :: {:ok, Identifier.t()} | {:error, atom()}
   def parse(input) do
     case Parser.parse(input) do
-      {:ok, %{style: style, side: side}} ->
-        {:ok, Identifier.new(style, side)}
+      {:ok, %{abbr: abbr, side: side}} ->
+        {:ok, Identifier.new(abbr, side)}
 
       {:error, reason} ->
         {:error, reason}
@@ -105,7 +105,7 @@ defmodule Sashite.Sin do
   ## Examples
 
       iex> sin = Sashite.Sin.parse!("C")
-      iex> sin.style
+      iex> sin.abbr
       :C
 
       iex> sin = Sashite.Sin.parse!("c")

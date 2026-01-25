@@ -12,35 +12,35 @@ defmodule Sashite.SinTest do
 
   describe "parse/1" do
     test "returns {:ok, identifier} for valid uppercase" do
-      assert {:ok, %Identifier{style: :C, side: :first}} = Sin.parse("C")
+      assert {:ok, %Identifier{abbr: :C, side: :first}} = Sin.parse("C")
     end
 
     test "returns {:ok, identifier} for valid lowercase" do
-      assert {:ok, %Identifier{style: :C, side: :second}} = Sin.parse("c")
+      assert {:ok, %Identifier{abbr: :C, side: :second}} = Sin.parse("c")
     end
 
     test "returns identifier with correct attributes" do
       {:ok, sin} = Sin.parse("S")
 
-      assert sin.style == :S
+      assert sin.abbr == :S
       assert sin.side == :first
     end
 
     test "parses all uppercase letters" do
       for letter <- ?A..?Z do
         input = <<letter>>
-        expected_style = String.to_atom(input)
+        expected_abbr = String.to_atom(input)
 
-        assert {:ok, %Identifier{style: ^expected_style, side: :first}} = Sin.parse(input)
+        assert {:ok, %Identifier{abbr: ^expected_abbr, side: :first}} = Sin.parse(input)
       end
     end
 
     test "parses all lowercase letters" do
       for letter <- ?a..?z do
         input = <<letter>>
-        expected_style = input |> String.upcase() |> String.to_atom()
+        expected_abbr = input |> String.upcase() |> String.to_atom()
 
-        assert {:ok, %Identifier{style: ^expected_style, side: :second}} = Sin.parse(input)
+        assert {:ok, %Identifier{abbr: ^expected_abbr, side: :second}} = Sin.parse(input)
       end
     end
 
@@ -65,14 +65,14 @@ defmodule Sashite.SinTest do
     test "returns identifier for valid uppercase" do
       sin = Sin.parse!("C")
 
-      assert sin.style == :C
+      assert sin.abbr == :C
       assert sin.side == :first
     end
 
     test "returns identifier for valid lowercase" do
       sin = Sin.parse!("c")
 
-      assert sin.style == :C
+      assert sin.abbr == :C
       assert sin.side == :second
     end
 
@@ -134,13 +134,6 @@ defmodule Sashite.SinTest do
   # ============================================================================
 
   describe "integration" do
-    test "parse then transform" do
-      {:ok, sin} = Sin.parse("C")
-      flipped = Identifier.flip(sin)
-
-      assert Identifier.to_string(flipped) == "c"
-    end
-
     test "parse! then query" do
       sin = Sin.parse!("S")
 

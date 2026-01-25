@@ -17,7 +17,7 @@ Add `sashite_sin` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:sashite_sin, "~> 2.0"}
+    {:sashite_sin, "~> 2.1"}
   ]
 end
 ```
@@ -33,13 +33,13 @@ alias Sashite.Sin.Identifier
 
 # Standard parsing (returns {:ok, _} or {:error, _})
 {:ok, sin} = Sashite.Sin.parse("C")
-sin.style  # => :C
-sin.side   # => :first
+sin.abbr  # => :C
+sin.side  # => :first
 
 # Lowercase indicates second player
 {:ok, sin} = Sashite.Sin.parse("c")
-sin.style  # => :C
-sin.side   # => :second
+sin.abbr  # => :C
+sin.side  # => :second
 
 # Bang version (raises on error)
 sin = Sashite.Sin.parse!("C")
@@ -75,36 +75,6 @@ Sashite.Sin.valid?("CC")  # => false
 Sashite.Sin.valid?("1")   # => false
 ```
 
-### Accessing Identifier Data
-
-```elixir
-sin = Sashite.Sin.parse!("C")
-
-# Get attributes (struct fields)
-sin.style  # => :C
-sin.side   # => :first
-
-# Get string component
-Sashite.Sin.Identifier.letter(sin)  # => "C"
-```
-
-### Transformations
-
-All transformations return new immutable `Identifier` structs.
-
-```elixir
-alias Sashite.Sin.Identifier
-
-sin = Sashite.Sin.parse!("C")
-
-# Side transformation
-Identifier.flip(sin) |> Identifier.to_string()  # => "c"
-
-# Attribute changes
-Identifier.with_style(sin, :S) |> Identifier.to_string()  # => "S"
-Identifier.with_side(sin, :second) |> Identifier.to_string()  # => "c"
-```
-
 ### Queries
 
 ```elixir
@@ -118,8 +88,8 @@ Identifier.second_player?(sin)  # => false
 
 # Comparison queries
 other = Sashite.Sin.parse!("c")
-Identifier.same_style?(sin, other)  # => true
-Identifier.same_side?(sin, other)   # => false
+Identifier.same_abbr?(sin, other)  # => true
+Identifier.same_side?(sin, other)  # => false
 ```
 
 ## API Reference
@@ -127,22 +97,22 @@ Identifier.same_side?(sin, other)   # => false
 ### Types
 
 ```elixir
-# Identifier represents a parsed SIN identifier with style and side.
+# Identifier represents a parsed SIN identifier with abbreviation and side.
 %Sashite.Sin.Identifier{
-  style: :A..:Z,          # Piece style (always uppercase atom)
+  abbr: :A..:Z,           # Style abbreviation (always uppercase atom)
   side: :first | :second  # Player side
 }
 
-# Create an Identifier from style and side.
+# Create an Identifier from abbreviation and side.
 # Raises ArgumentError if attributes are invalid.
-Sashite.Sin.Identifier.new(style, side)
+Sashite.Sin.Identifier.new(abbr, side)
 ```
 
 ### Constants
 
 ```elixir
-Sashite.Sin.Constants.valid_styles()  # => [:A, :B, ..., :Z]
-Sashite.Sin.Constants.valid_sides()   # => [:first, :second]
+Sashite.Sin.Constants.valid_abbrs()  # => [:A, :B, ..., :Z]
+Sashite.Sin.Constants.valid_sides()  # => [:first, :second]
 Sashite.Sin.Constants.max_string_length()  # => 1
 ```
 
@@ -165,19 +135,6 @@ Sashite.Sin.Constants.max_string_length()  # => 1
 @spec Sashite.Sin.valid?(String.t()) :: boolean()
 ```
 
-### Transformations
-
-All transformations return new `Sashite.Sin.Identifier` structs:
-
-```elixir
-# Side transformation
-@spec Identifier.flip(Identifier.t()) :: Identifier.t()
-
-# Attribute changes
-@spec Identifier.with_style(Identifier.t(), atom()) :: Identifier.t()
-@spec Identifier.with_side(Identifier.t(), atom()) :: Identifier.t()
-```
-
 ### Queries
 
 ```elixir
@@ -186,7 +143,7 @@ All transformations return new `Sashite.Sin.Identifier` structs:
 @spec Identifier.second_player?(Identifier.t()) :: boolean()
 
 # Comparison queries
-@spec Identifier.same_style?(Identifier.t(), Identifier.t()) :: boolean()
+@spec Identifier.same_abbr?(Identifier.t(), Identifier.t()) :: boolean()
 @spec Identifier.same_side?(Identifier.t(), Identifier.t()) :: boolean()
 ```
 
@@ -202,10 +159,10 @@ Parsing errors are returned as atoms:
 
 ## Design Principles
 
-- **Bounded values**: Explicit validation of styles and sides
+- **Bounded values**: Explicit validation of abbreviations and sides
 - **Struct-based**: `Identifier` struct enables pattern matching and encapsulation
 - **Elixir idioms**: `{:ok, _}` / `{:error, _}` tuples, `parse!` bang variant
-- **Immutable data**: All transformations return new structs
+- **Immutable data**: Structs are immutable by design
 - **No dependencies**: Pure Elixir standard library only
 
 ## Related Specifications

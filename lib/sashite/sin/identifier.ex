@@ -3,16 +3,15 @@ defmodule Sashite.Sin.Identifier do
   Represents a parsed SIN (Style Identifier Notation) identifier.
 
   An Identifier encodes two attributes:
-  - `style`: the piece style (A-Z as uppercase atom)
+  - `abbr`: the style abbreviation (A-Z as uppercase atom)
   - `side`: the player side (`:first` or `:second`)
 
-  Identifier structs are immutable. All transformation functions return
-  new Identifier structs, leaving the original unchanged.
+  Identifier structs are immutable.
 
   ## Examples
 
       iex> sin = Sashite.Sin.Identifier.new(:C, :first)
-      iex> sin.style
+      iex> sin.abbr
       :C
       iex> sin.side
       :first
@@ -30,12 +29,12 @@ defmodule Sashite.Sin.Identifier do
 
   alias Sashite.Sin.Constants
 
-  @enforce_keys [:style, :side]
-  defstruct [:style, :side]
+  @enforce_keys [:abbr, :side]
+  defstruct [:abbr, :side]
 
   @typedoc "A SIN identifier struct"
   @type t :: %__MODULE__{
-          style: atom(),
+          abbr: atom(),
           side: :first | :second
         }
 
@@ -44,11 +43,11 @@ defmodule Sashite.Sin.Identifier do
   # ==========================================================================
 
   @doc """
-  Creates a new Identifier with the given style and side.
+  Creates a new Identifier with the given abbreviation and side.
 
   ## Parameters
 
-  - `style` - The piece style (`:A` through `:Z`)
+  - `abbr` - The style abbreviation (`:A` through `:Z`)
   - `side` - The player side (`:first` or `:second`)
 
   ## Returns
@@ -57,12 +56,12 @@ defmodule Sashite.Sin.Identifier do
 
   ## Raises
 
-  - `ArgumentError` if style or side is invalid
+  - `ArgumentError` if abbr or side is invalid
 
   ## Examples
 
       iex> sin = Sashite.Sin.Identifier.new(:C, :first)
-      iex> sin.style
+      iex> sin.abbr
       :C
 
       iex> sin = Sashite.Sin.Identifier.new(:S, :second)
@@ -70,17 +69,17 @@ defmodule Sashite.Sin.Identifier do
       :second
 
       iex> Sashite.Sin.Identifier.new(:invalid, :first)
-      ** (ArgumentError) invalid style
+      ** (ArgumentError) invalid abbr
 
       iex> Sashite.Sin.Identifier.new(:C, :invalid)
       ** (ArgumentError) invalid side
   """
   @spec new(atom(), atom()) :: t()
-  def new(style, side) do
-    validate_style!(style)
+  def new(abbr, side) do
+    validate_abbr!(abbr)
     validate_side!(side)
 
-    %__MODULE__{style: style, side: side}
+    %__MODULE__{abbr: abbr, side: side}
   end
 
   # ==========================================================================
@@ -101,130 +100,14 @@ defmodule Sashite.Sin.Identifier do
       "c"
   """
   @spec to_string(t()) :: String.t()
-  def to_string(%__MODULE__{} = identifier) do
-    letter(identifier)
+  def to_string(%__MODULE__{abbr: abbr, side: :first}) do
+    Atom.to_string(abbr)
   end
 
-  @doc """
-  Returns the letter component of the SIN.
-
-  ## Examples
-
-      iex> sin = Sashite.Sin.Identifier.new(:C, :first)
-      iex> Sashite.Sin.Identifier.letter(sin)
-      "C"
-
-      iex> sin = Sashite.Sin.Identifier.new(:C, :second)
-      iex> Sashite.Sin.Identifier.letter(sin)
-      "c"
-  """
-  @spec letter(t()) :: String.t()
-  def letter(%__MODULE__{style: style, side: :first}) do
-    Atom.to_string(style)
-  end
-
-  def letter(%__MODULE__{style: style, side: :second}) do
-    style
+  def to_string(%__MODULE__{abbr: abbr, side: :second}) do
+    abbr
     |> Atom.to_string()
     |> String.downcase()
-  end
-
-  # ==========================================================================
-  # Side Transformations
-  # ==========================================================================
-
-  @doc """
-  Returns a new Identifier with the opposite side.
-
-  ## Examples
-
-      iex> sin = Sashite.Sin.Identifier.new(:C, :first)
-      iex> flipped = Sashite.Sin.Identifier.flip(sin)
-      iex> flipped.side
-      :second
-
-      iex> sin = Sashite.Sin.Identifier.new(:C, :second)
-      iex> flipped = Sashite.Sin.Identifier.flip(sin)
-      iex> flipped.side
-      :first
-  """
-  @spec flip(t()) :: t()
-  def flip(%__MODULE__{style: style, side: :first}) do
-    %__MODULE__{style: style, side: :second}
-  end
-
-  def flip(%__MODULE__{style: style, side: :second}) do
-    %__MODULE__{style: style, side: :first}
-  end
-
-  # ==========================================================================
-  # Attribute Transformations
-  # ==========================================================================
-
-  @doc """
-  Returns a new Identifier with a different style.
-
-  ## Parameters
-
-  - `identifier` - The source identifier
-  - `new_style` - The new piece style (`:A` through `:Z`)
-
-  ## Raises
-
-  - `ArgumentError` if the style is invalid
-
-  ## Examples
-
-      iex> sin = Sashite.Sin.Identifier.new(:C, :first)
-      iex> changed = Sashite.Sin.Identifier.with_style(sin, :S)
-      iex> changed.style
-      :S
-
-      iex> sin = Sashite.Sin.Identifier.new(:C, :first)
-      iex> same = Sashite.Sin.Identifier.with_style(sin, :C)
-      iex> same.style
-      :C
-  """
-  @spec with_style(t(), atom()) :: t()
-  def with_style(%__MODULE__{style: style} = identifier, new_style) when style == new_style do
-    identifier
-  end
-
-  def with_style(%__MODULE__{side: side}, new_style) do
-    new(new_style, side)
-  end
-
-  @doc """
-  Returns a new Identifier with a different side.
-
-  ## Parameters
-
-  - `identifier` - The source identifier
-  - `new_side` - The new side (`:first` or `:second`)
-
-  ## Raises
-
-  - `ArgumentError` if the side is invalid
-
-  ## Examples
-
-      iex> sin = Sashite.Sin.Identifier.new(:C, :first)
-      iex> changed = Sashite.Sin.Identifier.with_side(sin, :second)
-      iex> changed.side
-      :second
-
-      iex> sin = Sashite.Sin.Identifier.new(:C, :first)
-      iex> same = Sashite.Sin.Identifier.with_side(sin, :first)
-      iex> same.side
-      :first
-  """
-  @spec with_side(t(), atom()) :: t()
-  def with_side(%__MODULE__{side: side} = identifier, new_side) when side == new_side do
-    identifier
-  end
-
-  def with_side(%__MODULE__{style: style}, new_side) do
-    new(style, new_side)
   end
 
   # ==========================================================================
@@ -270,23 +153,23 @@ defmodule Sashite.Sin.Identifier do
   # ==========================================================================
 
   @doc """
-  Checks if two Identifiers have the same style.
+  Checks if two Identifiers have the same abbreviation.
 
   ## Examples
 
       iex> sin1 = Sashite.Sin.Identifier.new(:C, :first)
       iex> sin2 = Sashite.Sin.Identifier.new(:C, :second)
-      iex> Sashite.Sin.Identifier.same_style?(sin1, sin2)
+      iex> Sashite.Sin.Identifier.same_abbr?(sin1, sin2)
       true
 
       iex> sin1 = Sashite.Sin.Identifier.new(:C, :first)
       iex> sin2 = Sashite.Sin.Identifier.new(:S, :first)
-      iex> Sashite.Sin.Identifier.same_style?(sin1, sin2)
+      iex> Sashite.Sin.Identifier.same_abbr?(sin1, sin2)
       false
   """
-  @spec same_style?(t(), t()) :: boolean()
-  def same_style?(%__MODULE__{style: style}, %__MODULE__{style: style}), do: true
-  def same_style?(%__MODULE__{}, %__MODULE__{}), do: false
+  @spec same_abbr?(t(), t()) :: boolean()
+  def same_abbr?(%__MODULE__{abbr: abbr}, %__MODULE__{abbr: abbr}), do: true
+  def same_abbr?(%__MODULE__{}, %__MODULE__{}), do: false
 
   @doc """
   Checks if two Identifiers have the same side.
@@ -311,9 +194,9 @@ defmodule Sashite.Sin.Identifier do
   # Private Validation
   # ==========================================================================
 
-  defp validate_style!(style) do
-    unless Constants.valid_style?(style) do
-      raise ArgumentError, "invalid style"
+  defp validate_abbr!(abbr) do
+    unless Constants.valid_abbr?(abbr) do
+      raise ArgumentError, "invalid abbr"
     end
   end
 

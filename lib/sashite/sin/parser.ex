@@ -8,10 +8,10 @@ defmodule Sashite.Sin.Parser do
   ## Examples
 
       iex> Sashite.Sin.Parser.parse("C")
-      {:ok, %{style: :C, side: :first}}
+      {:ok, %{abbr: :C, side: :first}}
 
       iex> Sashite.Sin.Parser.parse("c")
-      {:ok, %{style: :C, side: :second}}
+      {:ok, %{abbr: :C, side: :second}}
 
       iex> Sashite.Sin.Parser.parse("")
       {:error, :empty_input}
@@ -33,7 +33,7 @@ defmodule Sashite.Sin.Parser do
 
   ## Returns
 
-  - `{:ok, %{style: atom, side: atom}}` on success
+  - `{:ok, %{abbr: atom, side: atom}}` on success
   - `{:error, reason}` on failure
 
   ## Error Reasons
@@ -45,10 +45,10 @@ defmodule Sashite.Sin.Parser do
   ## Examples
 
       iex> Sashite.Sin.Parser.parse("C")
-      {:ok, %{style: :C, side: :first}}
+      {:ok, %{abbr: :C, side: :first}}
 
       iex> Sashite.Sin.Parser.parse("s")
-      {:ok, %{style: :S, side: :second}}
+      {:ok, %{abbr: :S, side: :second}}
 
       iex> Sashite.Sin.Parser.parse("")
       {:error, :empty_input}
@@ -59,7 +59,7 @@ defmodule Sashite.Sin.Parser do
       iex> Sashite.Sin.Parser.parse("1")
       {:error, :must_be_letter}
   """
-  @spec parse(String.t()) :: {:ok, %{style: atom(), side: atom()}} | {:error, atom()}
+  @spec parse(String.t()) :: {:ok, %{abbr: atom(), side: atom()}} | {:error, atom()}
   def parse(input) when is_binary(input) do
     with :ok <- validate_not_empty(input),
          :ok <- validate_length(input),
@@ -125,14 +125,14 @@ defmodule Sashite.Sin.Parser do
 
   # Uppercase letter (A-Z): 0x41-0x5A
   defp parse_byte(byte) when byte >= 0x41 and byte <= 0x5A do
-    style = <<byte>> |> String.to_atom()
-    {:ok, %{style: style, side: :first}}
+    abbr = <<byte>> |> String.to_atom()
+    {:ok, %{abbr: abbr, side: :first}}
   end
 
   # Lowercase letter (a-z): 0x61-0x7A
   defp parse_byte(byte) when byte >= 0x61 and byte <= 0x7A do
-    style = <<byte>> |> String.upcase() |> String.to_atom()
-    {:ok, %{style: style, side: :second}}
+    abbr = <<byte>> |> String.upcase() |> String.to_atom()
+    {:ok, %{abbr: abbr, side: :second}}
   end
 
   # Any other byte

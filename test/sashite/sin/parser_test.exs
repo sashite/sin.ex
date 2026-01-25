@@ -11,19 +11,19 @@ defmodule Sashite.Sin.ParserTest do
 
   describe "parse/1 with uppercase letters" do
     test "parses uppercase letter 'C'" do
-      assert {:ok, %{style: :C, side: :first}} = Parser.parse("C")
+      assert {:ok, %{abbr: :C, side: :first}} = Parser.parse("C")
     end
 
     test "parses uppercase letter 'S'" do
-      assert {:ok, %{style: :S, side: :first}} = Parser.parse("S")
+      assert {:ok, %{abbr: :S, side: :first}} = Parser.parse("S")
     end
 
     test "parses all uppercase letters A-Z" do
       for letter <- ?A..?Z do
         input = <<letter>>
-        expected_style = String.to_atom(input)
+        expected_abbr = String.to_atom(input)
 
-        assert {:ok, %{style: ^expected_style, side: :first}} = Parser.parse(input)
+        assert {:ok, %{abbr: ^expected_abbr, side: :first}} = Parser.parse(input)
       end
     end
   end
@@ -34,19 +34,19 @@ defmodule Sashite.Sin.ParserTest do
 
   describe "parse/1 with lowercase letters" do
     test "parses lowercase letter 'c'" do
-      assert {:ok, %{style: :C, side: :second}} = Parser.parse("c")
+      assert {:ok, %{abbr: :C, side: :second}} = Parser.parse("c")
     end
 
     test "parses lowercase letter 's'" do
-      assert {:ok, %{style: :S, side: :second}} = Parser.parse("s")
+      assert {:ok, %{abbr: :S, side: :second}} = Parser.parse("s")
     end
 
     test "parses all lowercase letters a-z" do
       for letter <- ?a..?z do
         input = <<letter>>
-        expected_style = input |> String.upcase() |> String.to_atom()
+        expected_abbr = input |> String.upcase() |> String.to_atom()
 
-        assert {:ok, %{style: ^expected_style, side: :second}} = Parser.parse(input)
+        assert {:ok, %{abbr: ^expected_abbr, side: :second}} = Parser.parse(input)
       end
     end
   end
@@ -182,9 +182,12 @@ defmodule Sashite.Sin.ParserTest do
     end
 
     test "rejects other control characters" do
-      refute Parser.valid?(<<1>>)    # SOH
-      refute Parser.valid?(<<27>>)   # ESC
-      refute Parser.valid?(<<127>>)  # DEL
+      # SOH
+      refute Parser.valid?(<<1>>)
+      # ESC
+      refute Parser.valid?(<<27>>)
+      # DEL
+      refute Parser.valid?(<<127>>)
     end
   end
 
@@ -276,7 +279,7 @@ defmodule Sashite.Sin.ParserTest do
     end
 
     test "rejects map" do
-      refute Parser.valid?(%{style: :C})
+      refute Parser.valid?(%{abbr: :C})
     end
   end
 
@@ -290,7 +293,7 @@ defmodule Sashite.Sin.ParserTest do
         input = <<letter>>
         {:ok, result} = Parser.parse(input)
 
-        identifier = Sashite.Sin.Identifier.new(result.style, result.side)
+        identifier = Sashite.Sin.Identifier.new(result.abbr, result.side)
         assert Sashite.Sin.Identifier.to_string(identifier) == input
       end
     end
@@ -300,7 +303,7 @@ defmodule Sashite.Sin.ParserTest do
         input = <<letter>>
         {:ok, result} = Parser.parse(input)
 
-        identifier = Sashite.Sin.Identifier.new(result.style, result.side)
+        identifier = Sashite.Sin.Identifier.new(result.abbr, result.side)
         assert Sashite.Sin.Identifier.to_string(identifier) == input
       end
     end
