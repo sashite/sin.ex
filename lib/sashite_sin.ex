@@ -9,6 +9,10 @@ defmodule Sashite.Sin do
   - Uppercase (A-Z) indicates first player
   - Lowercase (a-z) indicates second player
 
+  All 52 valid inputs are resolved at compile time via generated function
+  clauses. At runtime, parsing is a single pattern match on the raw byte —
+  no branching, no map lookups, no string conversions.
+
   ## Examples
 
       iex> {:ok, sin} = Sashite.Sin.parse("C")
@@ -33,10 +37,17 @@ defmodule Sashite.Sin do
   """
 
   alias Sashite.Sin.Identifier
-  alias Sashite.Sin.Parser
+
+  # ============================================================================
+  # Parsing (String → Identifier)
+  # ============================================================================
 
   @doc """
   Parses a SIN string into an Identifier.
+
+  Each valid byte value has its own function clause, generated at compile
+  time. The BEAM dispatches directly to the correct clause — no runtime
+  branching, no intermediate data structures.
 
   ## Parameters
 
@@ -77,18 +88,38 @@ defmodule Sashite.Sin do
       {:error, :must_be_letter}
   """
   @spec parse(String.t()) :: {:ok, Identifier.t()} | {:error, atom()}
-  def parse(input) do
-    case Parser.parse(input) do
-      {:ok, %{abbr: abbr, side: side}} ->
-        {:ok, Identifier.new(abbr, side)}
 
-      {:error, reason} ->
-        {:error, reason}
+  # -- 52 compile-time generated clauses (26 uppercase + 26 lowercase) ---------
+
+  for letter <- ?A..?Z do
+    abbr = List.to_atom([letter])
+    upper_bin = <<letter>>
+    lower_bin = <<letter + 32>>
+
+    def parse(unquote(upper_bin)) do
+      {:ok, %Identifier{abbr: unquote(abbr), side: :first}}
+    end
+
+    def parse(unquote(lower_bin)) do
+      {:ok, %Identifier{abbr: unquote(abbr), side: :second}}
     end
   end
 
+  # -- Error clauses (evaluated only when no valid clause matched) -------------
+
+  def parse(""), do: {:error, :empty_input}
+  def parse(<<_byte>>), do: {:error, :must_be_letter}
+  def parse(input) when is_binary(input), do: {:error, :input_too_long}
+  def parse(_), do: {:error, :must_be_letter}
+
+  # ============================================================================
+  # Parsing — bang variant
+  # ============================================================================
+
   @doc """
   Parses a SIN string into an Identifier, raising on error.
+
+  Delegates to `parse/1`. Raises `ArgumentError` only at the boundary.
 
   ## Parameters
 
@@ -124,16 +155,108 @@ defmodule Sashite.Sin do
   @spec parse!(String.t()) :: Identifier.t()
   def parse!(input) do
     case parse(input) do
-      {:ok, identifier} ->
-        identifier
-
-      {:error, reason} ->
-        raise ArgumentError, error_message(reason)
+      {:ok, identifier} -> identifier
+      {:error, reason} -> raise ArgumentError, error_message(reason)
     end
   end
 
+  # ============================================================================
+  # Fetching by components (Atom, Atom → Identifier)
+  # ============================================================================
+
+  @doc """
+  Retrieves an Identifier by abbreviation and side.
+
+  Bypasses string parsing entirely — validates components and builds
+  the struct directly via `Identifier.build/2`.
+
+  ## Parameters
+
+  - `abbr` - The style abbreviation (`:A` through `:Z`)
+  - `side` - The player side (`:first` or `:second`)
+
+  ## Returns
+
+  - `{:ok, %Identifier{}}` on success
+  - `{:error, reason}` on failure
+
+  ## Examples
+
+      iex> {:ok, sin} = Sashite.Sin.fetch(:C, :first)
+      iex> sin.abbr
+      :C
+      iex> sin.side
+      :first
+
+      iex> {:ok, sin} = Sashite.Sin.fetch(:C, :second)
+      iex> sin.side
+      :second
+
+      iex> Sashite.Sin.fetch(:CC, :first)
+      {:error, :invalid_abbr}
+
+      iex> Sashite.Sin.fetch(:C, :third)
+      {:error, :invalid_side}
+  """
+  @spec fetch(atom(), atom()) :: {:ok, Identifier.t()} | {:error, atom()}
+  def fetch(abbr, side) do
+    Identifier.build(abbr, side)
+  end
+
+  # ============================================================================
+  # Fetching — bang variant
+  # ============================================================================
+
+  @doc """
+  Retrieves an Identifier by abbreviation and side, raising on error.
+
+  Delegates to `fetch/2`. Raises `ArgumentError` only at the boundary.
+
+  ## Parameters
+
+  - `abbr` - The style abbreviation (`:A` through `:Z`)
+  - `side` - The player side (`:first` or `:second`)
+
+  ## Returns
+
+  An `%Identifier{}` struct.
+
+  ## Raises
+
+  - `ArgumentError` if components are invalid
+
+  ## Examples
+
+      iex> sin = Sashite.Sin.fetch!(:C, :first)
+      iex> sin.abbr
+      :C
+
+      iex> sin = Sashite.Sin.fetch!(:S, :second)
+      iex> sin.side
+      :second
+
+      iex> Sashite.Sin.fetch!(:CC, :first)
+      ** (ArgumentError) invalid abbr
+
+      iex> Sashite.Sin.fetch!(:C, :third)
+      ** (ArgumentError) invalid side
+  """
+  @spec fetch!(atom(), atom()) :: Identifier.t()
+  def fetch!(abbr, side) do
+    case fetch(abbr, side) do
+      {:ok, identifier} -> identifier
+      {:error, reason} -> raise ArgumentError, error_message(reason)
+    end
+  end
+
+  # ============================================================================
+  # Validation
+  # ============================================================================
+
   @doc """
   Reports whether the input is a valid SIN string.
+
+  Never raises. Returns `false` for any invalid input including `nil`.
 
   ## Examples
 
@@ -157,14 +280,19 @@ defmodule Sashite.Sin do
   """
   @spec valid?(term()) :: boolean()
   def valid?(input) do
-    Parser.valid?(input)
+    case parse(input) do
+      {:ok, _} -> true
+      {:error, _} -> false
+    end
   end
 
-  # ==========================================================================
-  # Private Helpers
-  # ==========================================================================
+  # ============================================================================
+  # Private
+  # ============================================================================
 
   defp error_message(:empty_input), do: "empty input"
   defp error_message(:input_too_long), do: "input too long"
   defp error_message(:must_be_letter), do: "must be letter"
+  defp error_message(:invalid_abbr), do: "invalid abbr"
+  defp error_message(:invalid_side), do: "invalid side"
 end

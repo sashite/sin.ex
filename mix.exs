@@ -1,7 +1,7 @@
 defmodule Sashite.Sin.MixProject do
   use Mix.Project
 
-  @version "2.1.0"
+  @version "3.0.0"
   @source_url "https://github.com/sashite/sin.ex"
 
   def project do
@@ -39,8 +39,8 @@ defmodule Sashite.Sin.MixProject do
 
   defp description do
     "SIN (Style Identifier Notation) implementation for Elixir. " <>
-      "Provides a rule-agnostic format for identifying player styles in abstract strategy " <>
-      "board games with immutable identifier structs and functional programming principles."
+      "Compile-time generated function clauses for zero-overhead parsing of player style " <>
+      "identifiers in abstract strategy board games."
   end
 
   defp package do

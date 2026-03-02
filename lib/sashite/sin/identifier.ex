@@ -6,7 +6,8 @@ defmodule Sashite.Sin.Identifier do
   - `abbr`: the style abbreviation (A-Z as uppercase atom)
   - `side`: the player side (`:first` or `:second`)
 
-  Identifier structs are immutable.
+  Identifier structs are immutable. All string conversions and constructors
+  use compile-time generated function clauses for zero-overhead dispatch.
 
   ## Examples
 
@@ -27,8 +28,6 @@ defmodule Sashite.Sin.Identifier do
   See: https://sashite.dev/specs/sin/1.0.0/
   """
 
-  alias Sashite.Sin.Constants
-
   @enforce_keys [:abbr, :side]
   defstruct [:abbr, :side]
 
@@ -39,7 +38,7 @@ defmodule Sashite.Sin.Identifier do
         }
 
   # ==========================================================================
-  # Constructor
+  # Constructor (raising)
   # ==========================================================================
 
   @doc """
@@ -76,18 +75,74 @@ defmodule Sashite.Sin.Identifier do
   """
   @spec new(atom(), atom()) :: t()
   def new(abbr, side) do
-    validate_abbr!(abbr)
-    validate_side!(side)
-
-    %__MODULE__{abbr: abbr, side: side}
+    case build(abbr, side) do
+      {:ok, identifier} -> identifier
+      {:error, :invalid_abbr} -> raise ArgumentError, "invalid abbr"
+      {:error, :invalid_side} -> raise ArgumentError, "invalid side"
+    end
   end
 
   # ==========================================================================
-  # String Conversion
+  # Constructor (safe)
+  # ==========================================================================
+
+  @doc """
+  Creates a new Identifier with the given abbreviation and side.
+
+  Returns `{:ok, identifier}` on success, `{:error, reason}` on failure.
+  Never raises. Never allocates exception objects.
+
+  ## Parameters
+
+  - `abbr` - The style abbreviation (`:A` through `:Z`)
+  - `side` - The player side (`:first` or `:second`)
+
+  ## Examples
+
+      iex> {:ok, sin} = Sashite.Sin.Identifier.build(:C, :first)
+      iex> sin.abbr
+      :C
+
+      iex> {:ok, sin} = Sashite.Sin.Identifier.build(:S, :second)
+      iex> sin.side
+      :second
+
+      iex> Sashite.Sin.Identifier.build(:invalid, :first)
+      {:error, :invalid_abbr}
+
+      iex> Sashite.Sin.Identifier.build(:C, :invalid)
+      {:error, :invalid_side}
+  """
+  @spec build(atom(), atom()) :: {:ok, t()} | {:error, :invalid_abbr | :invalid_side}
+
+  # -- 52 compile-time generated clauses (26 letters × 2 sides) ---------------
+
+  for letter <- ?A..?Z do
+    abbr = List.to_atom([letter])
+
+    def build(unquote(abbr), :first) do
+      {:ok, %__MODULE__{abbr: unquote(abbr), side: :first}}
+    end
+
+    def build(unquote(abbr), :second) do
+      {:ok, %__MODULE__{abbr: unquote(abbr), side: :second}}
+    end
+  end
+
+  # -- Catch-all: determine which component is invalid -------------------------
+
+  def build(_abbr, side) when side in [:first, :second], do: {:error, :invalid_abbr}
+  def build(_abbr, _side), do: {:error, :invalid_side}
+
+  # ==========================================================================
+  # String Conversion — 52 compile-time generated clauses
   # ==========================================================================
 
   @doc """
   Returns the SIN string representation.
+
+  Each clause returns a pre-computed binary literal. No `Atom.to_string/1`
+  or `String.downcase/1` is called at runtime.
 
   ## Examples
 
@@ -100,14 +155,14 @@ defmodule Sashite.Sin.Identifier do
       "c"
   """
   @spec to_string(t()) :: String.t()
-  def to_string(%__MODULE__{abbr: abbr, side: :first}) do
-    Atom.to_string(abbr)
-  end
 
-  def to_string(%__MODULE__{abbr: abbr, side: :second}) do
-    abbr
-    |> Atom.to_string()
-    |> String.downcase()
+  for letter <- ?A..?Z do
+    abbr = List.to_atom([letter])
+    upper = <<letter>>
+    lower = <<letter + 32>>
+
+    def to_string(%__MODULE__{abbr: unquote(abbr), side: :first}), do: unquote(upper)
+    def to_string(%__MODULE__{abbr: unquote(abbr), side: :second}), do: unquote(lower)
   end
 
   # ==========================================================================
@@ -189,22 +244,6 @@ defmodule Sashite.Sin.Identifier do
   @spec same_side?(t(), t()) :: boolean()
   def same_side?(%__MODULE__{side: side}, %__MODULE__{side: side}), do: true
   def same_side?(%__MODULE__{}, %__MODULE__{}), do: false
-
-  # ==========================================================================
-  # Private Validation
-  # ==========================================================================
-
-  defp validate_abbr!(abbr) do
-    unless Constants.valid_abbr?(abbr) do
-      raise ArgumentError, "invalid abbr"
-    end
-  end
-
-  defp validate_side!(side) do
-    unless Constants.valid_side?(side) do
-      raise ArgumentError, "invalid side"
-    end
-  end
 end
 
 defimpl String.Chars, for: Sashite.Sin.Identifier do

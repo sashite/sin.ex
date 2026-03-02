@@ -6,7 +6,67 @@ defmodule Sashite.Sin.IdentifierTest do
   doctest Identifier
 
   # ============================================================================
-  # new/2
+  # build/2 (safe constructor)
+  # ============================================================================
+
+  describe "build/2" do
+    test "returns {:ok, identifier} for valid abbr and first side" do
+      assert {:ok, %Identifier{abbr: :C, side: :first}} = Identifier.build(:C, :first)
+    end
+
+    test "returns {:ok, identifier} for valid abbr and second side" do
+      assert {:ok, %Identifier{abbr: :S, side: :second}} = Identifier.build(:S, :second)
+    end
+
+    test "builds all 26 abbreviations with first side" do
+      for letter <- ?A..?Z do
+        abbr = List.to_atom([letter])
+        assert {:ok, %Identifier{abbr: ^abbr, side: :first}} = Identifier.build(abbr, :first)
+      end
+    end
+
+    test "builds all 26 abbreviations with second side" do
+      for letter <- ?A..?Z do
+        abbr = List.to_atom([letter])
+        assert {:ok, %Identifier{abbr: ^abbr, side: :second}} = Identifier.build(abbr, :second)
+      end
+    end
+
+    test "returns {:error, :invalid_abbr} for lowercase atom" do
+      assert {:error, :invalid_abbr} = Identifier.build(:c, :first)
+    end
+
+    test "returns {:error, :invalid_abbr} for multi-letter atom" do
+      assert {:error, :invalid_abbr} = Identifier.build(:CC, :first)
+    end
+
+    test "returns {:error, :invalid_abbr} for non-letter atom" do
+      assert {:error, :invalid_abbr} = Identifier.build(:invalid, :first)
+    end
+
+    test "returns {:error, :invalid_abbr} for string" do
+      assert {:error, :invalid_abbr} = Identifier.build("C", :first)
+    end
+
+    test "returns {:error, :invalid_abbr} for integer" do
+      assert {:error, :invalid_abbr} = Identifier.build(67, :first)
+    end
+
+    test "returns {:error, :invalid_side} for invalid side atom" do
+      assert {:error, :invalid_side} = Identifier.build(:C, :third)
+    end
+
+    test "returns {:error, :invalid_side} for string side" do
+      assert {:error, :invalid_side} = Identifier.build(:C, "first")
+    end
+
+    test "returns {:error, :invalid_side} for integer side" do
+      assert {:error, :invalid_side} = Identifier.build(:C, 1)
+    end
+  end
+
+  # ============================================================================
+  # new/2 (raising constructor)
   # ============================================================================
 
   describe "new/2" do
@@ -220,6 +280,26 @@ defmodule Sashite.Sin.IdentifierTest do
     test "inspect for second player" do
       sin = Identifier.new(:C, :second)
       assert inspect(sin) == "#Sashite.Sin.Identifier<c>"
+    end
+  end
+
+  # ============================================================================
+  # Consistency: build/2 and new/2 produce identical results
+  # ============================================================================
+
+  describe "build/2 and new/2 consistency" do
+    test "produce identical structs for all 52 valid combinations" do
+      for letter <- ?A..?Z do
+        abbr = List.to_atom([letter])
+
+        {:ok, from_build} = Identifier.build(abbr, :first)
+        from_new = Identifier.new(abbr, :first)
+        assert from_build == from_new
+
+        {:ok, from_build} = Identifier.build(abbr, :second)
+        from_new = Identifier.new(abbr, :second)
+        assert from_build == from_new
+      end
     end
   end
 end
