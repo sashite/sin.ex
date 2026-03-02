@@ -60,6 +60,7 @@ defmodule Sashite.Sin do
 
   ## Error Reasons
 
+  - `:not_a_string` - Input is not a binary (e.g., nil, integer, atom, list)
   - `:empty_input` - String length is 0
   - `:input_too_long` - String exceeds 1 character
   - `:must_be_letter` - Character is not A-Z or a-z
@@ -86,6 +87,9 @@ defmodule Sashite.Sin do
 
       iex> Sashite.Sin.parse("1")
       {:error, :must_be_letter}
+
+      iex> Sashite.Sin.parse(nil)
+      {:error, :not_a_string}
   """
   @spec parse(String.t()) :: {:ok, Identifier.t()} | {:error, atom()}
 
@@ -110,7 +114,7 @@ defmodule Sashite.Sin do
   def parse(""), do: {:error, :empty_input}
   def parse(<<_byte>>), do: {:error, :must_be_letter}
   def parse(input) when is_binary(input), do: {:error, :input_too_long}
-  def parse(_), do: {:error, :must_be_letter}
+  def parse(_), do: {:error, :not_a_string}
 
   # ============================================================================
   # Parsing — bang variant
@@ -151,6 +155,9 @@ defmodule Sashite.Sin do
 
       iex> Sashite.Sin.parse!("1")
       ** (ArgumentError) must be letter
+
+      iex> Sashite.Sin.parse!(nil)
+      ** (ArgumentError) not a string
   """
   @spec parse!(String.t()) :: Identifier.t()
   def parse!(input) do
@@ -290,6 +297,7 @@ defmodule Sashite.Sin do
   # Private
   # ============================================================================
 
+  defp error_message(:not_a_string), do: "not a string"
   defp error_message(:empty_input), do: "empty input"
   defp error_message(:input_too_long), do: "input too long"
   defp error_message(:must_be_letter), do: "must be letter"

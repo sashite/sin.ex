@@ -29,7 +29,7 @@ The closed domain of 52 possible values enables a compile-time generated archite
 # In your mix.exs
 def deps do
   [
-    {:sashite_sin, "~> 3.0"}
+    {:sashite_sin, "~> 3.1"}
   ]
 end
 ```
@@ -55,8 +55,9 @@ sin.side  # => :second
 sin = Sashite.Sin.parse!("C")
 
 # Invalid input returns error tuple
-{:error, reason} = Sashite.Sin.parse("")
-{:error, reason} = Sashite.Sin.parse("CC")
+{:error, :not_a_string} = Sashite.Sin.parse(nil)
+{:error, :empty_input}  = Sashite.Sin.parse("")
+{:error, :input_too_long} = Sashite.Sin.parse("CC")
 ```
 
 ### Safe Fetching by Components (Atom, Atom → Identifier)
@@ -172,11 +173,12 @@ Parsing errors are returned as atoms in `{:error, reason}` tuples:
 
 | Atom | Cause |
 |------|-------|
+| `:not_a_string` | Input is not a binary (e.g., `nil`, integer, atom, list) |
 | `:empty_input` | String length is 0 |
 | `:input_too_long` | String exceeds 1 character |
 | `:must_be_letter` | Character is not A-Z or a-z |
-| `:invalid_abbr` | Abbreviation is not :A through :Z |
-| `:invalid_side` | Side is not :first or :second |
+| `:invalid_abbr` | Abbreviation is not `:A` through `:Z` |
+| `:invalid_side` | Side is not `:first` or `:second` |
 
 ## Design Principles
 

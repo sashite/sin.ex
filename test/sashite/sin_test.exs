@@ -76,12 +76,12 @@ defmodule Sashite.SinTest do
       assert {:error, :must_be_letter} = Sin.parse(" ")
     end
 
-    test "returns {:error, :must_be_letter} for non-string input" do
-      assert {:error, :must_be_letter} = Sin.parse(nil)
-      assert {:error, :must_be_letter} = Sin.parse(123)
-      assert {:error, :must_be_letter} = Sin.parse([?C])
-      assert {:error, :must_be_letter} = Sin.parse(:C)
-      assert {:error, :must_be_letter} = Sin.parse(%{abbr: :C})
+    test "returns {:error, :not_a_string} for non-string input" do
+      assert {:error, :not_a_string} = Sin.parse(nil)
+      assert {:error, :not_a_string} = Sin.parse(123)
+      assert {:error, :not_a_string} = Sin.parse([?C])
+      assert {:error, :not_a_string} = Sin.parse(:C)
+      assert {:error, :not_a_string} = Sin.parse(%{abbr: :C})
     end
   end
 
@@ -119,6 +119,12 @@ defmodule Sashite.SinTest do
     test "raises ArgumentError for non-letter" do
       assert_raise ArgumentError, "must be letter", fn ->
         Sin.parse!("1")
+      end
+    end
+
+    test "raises ArgumentError for non-string input" do
+      assert_raise ArgumentError, "not a string", fn ->
+        Sin.parse!(nil)
       end
     end
   end
